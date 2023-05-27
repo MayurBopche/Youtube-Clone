@@ -2,16 +2,25 @@ import { Box, Stack, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Sidebar, Videos } from "./compIndex";
 import { fetchFromAPI } from "../fetchFromAPI";
+import { useQuery } from "@tanstack/react-query";
 
 function Feed() {
   const [selectedCategory, setSelectedCategory] = useState<string>(`New`);
   const [videos, setVideos] = useState<any>([]);
 
-  useEffect(() => {
-    fetchFromAPI(`search?part=snippet&q=${selectedCategory}`).then((data) => {
-      setVideos(data.items);
-    });
-  }, [selectedCategory]);
+  useQuery({
+    queryKey: ["videos", selectedCategory],
+    queryFn: () =>
+      fetchFromAPI(`search?part=snippet&q=${selectedCategory}`).then(
+        (data) => data.items
+      ),
+    enabled: Boolean(selectedCategory),
+    onSuccess: (data) => {
+      setVideos(data);
+    },
+  });
+
+  // setVideos(categoryVideos);
 
   return (
     <Stack sx={{ flexDirection: { xs: "column", md: "row" } }}>
