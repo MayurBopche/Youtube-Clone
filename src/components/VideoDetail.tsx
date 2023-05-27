@@ -6,21 +6,34 @@ import { CheckCircle } from "@mui/icons-material";
 
 import { Videos } from "./compIndex";
 import { fetchFromAPI } from "../fetchFromAPI";
+import { useQuery } from "@tanstack/react-query";
 
 function VideoDetail() {
   const { id } = useParams();
   const [videoDetail, setVideoDetail] = useState<any>(null);
   const [videos, setVideos] = useState<any>(null);
 
-  useEffect(() => {
-    fetchFromAPI(`videos?.part=snippet,statistics&id=${id}`).then((data) =>
-      setVideoDetail(data.items[0])
-    );
+  useQuery({
+    queryKey: ["videos", "statistics", id],
+    queryFn: () =>
+      fetchFromAPI(`videos?.part=snippet,statistics&id=${id}`).then(
+        (data) => data.items[0]
+      ),
+    onSuccess(data) {
+      setVideoDetail(data);
+    },
+  });
 
-    fetchFromAPI(`search?part=snippet&relatedToVideoId=${id}&type=video`).then(
-      (data) => setVideos(data.items)
-    );
-  }, [id]);
+  useQuery({
+    queryKey: ["videos", "relatedSuggestion", id],
+    queryFn: () =>
+      fetchFromAPI(
+        `search?part=snippet&relatedToVideoId=${id}&type=video`
+      ).then((data) => data.items),
+    onSuccess(data) {
+      setVideos(data);
+    },
+  });
 
   return (
     <Box minHeight="95vh">

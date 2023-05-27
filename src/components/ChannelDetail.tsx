@@ -4,21 +4,34 @@ import { Box } from "@mui/material";
 
 import { Videos, ChannelCard } from "./compIndex";
 import { fetchFromAPI } from "../fetchFromAPI";
+import { useQuery } from "@tanstack/react-query";
 
 function ChannelDetail() {
   const { id } = useParams();
   const [channelDetail, setChannelDetail] = useState(null);
   const [videos, setVideos] = useState([]);
 
-  useEffect(() => {
-    fetchFromAPI(`channels?part=snippet&id=${id}`).then((data) => {
-      setChannelDetail(data?.items[0]);
-    });
+  useQuery({
+    queryKey: ["channels", id],
+    queryFn: () =>
+      fetchFromAPI(`channels?part=snippet&id=${id}`).then(
+        (data) => data?.items[0]
+      ),
+    onSuccess(data) {
+      setChannelDetail(data);
+    },
+  });
 
-    fetchFromAPI(`search?channelId=${id}&part=snippet&order=date`).then(
-      (data) => setVideos(data?.items)
-    );
-  }, [id]);
+  useQuery({
+    queryKey: ["videos", "channelVideos", id],
+    queryFn: () =>
+      fetchFromAPI(`search?channelId=${id}&part=snippet&order=date`).then(
+        (data) => data?.items
+      ),
+    onSuccess(data) {
+      setVideos(data);
+    },
+  });
 
   return (
     <Box minHeight="95vh">
